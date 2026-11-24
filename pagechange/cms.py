@@ -90,8 +90,10 @@ class ContentfulCMS:
         locale: str | None = None,
         session: Any = None,
     ) -> None:
-        self.token = token or os.environ["CONTENTFUL_CMA_TOKEN"]
-        self.space = space or os.environ["CONTENTFUL_SPACE_ID"]
+        self.token = (token or os.environ["CONTENTFUL_CMA_TOKEN"]).strip()
+        self.space = (space or os.environ["CONTENTFUL_SPACE_ID"]).strip()
+        # EU data residency accounts use https://api.eu.contentful.com
+        self.base = (os.environ.get("CONTENTFUL_API_HOST") or self.base).rstrip("/")
         self.environment = environment or os.environ.get("CONTENTFUL_ENVIRONMENT", "master")
         self.locale = locale or os.environ.get("CONTENTFUL_LOCALE", "en-US")
         if session is None:

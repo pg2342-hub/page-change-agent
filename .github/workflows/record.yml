@@ -13,6 +13,7 @@ jobs:
     concurrency: change-requests  # shares the Contentful space with the issue handler
     env:
       CONTENTFUL_SPACE_ID: ${{ vars.CONTENTFUL_SPACE_ID }}
+      CONTENTFUL_API_HOST: ${{ vars.CONTENTFUL_API_HOST }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,6 +32,15 @@ jobs:
           test -n "$ANTHROPIC_API_KEY" || (echo "Add the ANTHROPIC_API_KEY repo secret first" && exit 1)
           test -n "$CONTENTFUL_CMA_TOKEN" || (echo "Add the CONTENTFUL_CMA_TOKEN repo secret first" && exit 1)
           test -n "$CONTENTFUL_SPACE_ID" || (echo "Add the CONTENTFUL_SPACE_ID repo variable first" && exit 1)
+      - name: Check the Contentful token can reach the space
+        env:
+          CONTENTFUL_CMA_TOKEN: ${{ secrets.CONTENTFUL_CMA_TOKEN }}
+        run: |
+          host="${CONTENTFUL_API_HOST:-https://api.contentful.com}"
+          tok="$(printf '%s' "$CONTENTFUL_CMA_TOKEN" | tr -d '[:space:]')"
+          echo "token starts with: ${tok:0:6}  length: ${#tok}  host: $host"
+          curl -s -H "Authorization: Bearer $tok" "$host/users/me" | python -c "import json,sys; d=json.load(sys.stdin); print('users/me:', d.get('sys',{}).get('id') or d)"
+          curl -s -H "Authorization: Bearer $tok" "$host/spaces/$CONTENTFUL_SPACE_ID" | python -c "import json,sys; d=json.load(sys.stdin); print('space:', d.get('name') or d)"
       - name: Create the content type and the ten pages in Contentful
         env:
           CONTENTFUL_CMA_TOKEN: ${{ secrets.CONTENTFUL_CMA_TOKEN }}
