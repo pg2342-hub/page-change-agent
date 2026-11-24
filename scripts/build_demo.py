@@ -252,7 +252,9 @@ def build(preview: bool) -> str:
         "{{MATCHED}}": str(matched),
         "{{PUBLISHED}}": str(published),
         "{{CMS}}": e(cms_name),
-        "{{GUARD}}": str(n["guardrail"]),
+        "{{GUARD_LINE}}": "The agent routed every risky request itself, so the compliance checks never had to stop a draft."
+        if n["guardrail"] == 0
+        else f"Checks stopped {n['guardrail']} drafts the agent tried to make, before anything was saved.",
         "{{READBACK}}": "Every saved draft was unpublished and read back exactly"
         if matched == written and published == 0
         else "Not every saved draft read back cleanly",

@@ -15,6 +15,7 @@ from checks import checks as rule_checks
 from golive_gate import NA, CheckSet, judge_check
 
 from pagechange import site
+from pagechange.cms import FIELD_IDS
 from pagechange.recorded import ROOT, Tape, recording_judge, replay_judge
 from pagechange.ticket import FIELD_NAMES
 
@@ -53,7 +54,12 @@ def _render_output(out):
     ]
     # The judge needs the rest of the page (a claim already made elsewhere on it is not new) and the site's
     # pages (to tell a real link target from a guess). Both are things a human reviewer would have open.
-    rest = [f"{FIELD_NAMES.get(k, k)}: {v}" for k, v in out["before"].items() if k not in out["changed"]]
+    # Fixed field order (the CMS's), so a replayed output gives the same prompt as the live one did.
+    rest = [
+        f"{FIELD_NAMES.get(k, k)}: {out['before'][k]}"
+        for k in FIELD_IDS
+        if k in out["before"] and k not in out["changed"]
+    ]
     return (
         "Changed fields:\n"
         + "\n".join(rows)
