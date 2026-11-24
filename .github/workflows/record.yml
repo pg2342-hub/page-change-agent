@@ -5,6 +5,7 @@ on:
 permissions:
   contents: write
   actions: write
+  issues: write  # creates the change-request label
 
 jobs:
   record:
