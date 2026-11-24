@@ -18,7 +18,7 @@ REVIEW = {"decision": "send_to_review", "risk": "high", "changes": [], "reason":
 
 ANSWERS = {
     "l01": _edit("low", body=T["term-life"]["body"].replace("beneficary", "beneficiary")),
-    "l02": _edit("low", updated_on="2026-12-01"),
+    "l02": _edit("low", updated_on="2026-11-23"),
     "l03": _edit("low", cta_url="/find-an-advisor"),
     "l04": _edit("low", hero_alt="Family of four on a front porch at sunset"),
     "l05": _edit("low", headline="Benefits your employees will use"),

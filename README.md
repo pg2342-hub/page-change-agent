@@ -18,7 +18,7 @@ The CMS is [Contentful](https://www.contentful.com/) (its Content Management API
 | Save | An unpublished draft through the Contentful Management API, sent with the page's version so two edits cannot overwrite each other, then read back and compared field by field. | `pagechange/cms.py`, `pagechange/pipeline.py` |
 | Reply | A comment with the diff, the checks and the cost, plus a `ready-for-approval` (and `risk:low` or `risk:standard`) or `needs-compliance` label. | `pagechange/ticket.py`, `.github/workflows/handle-ticket.yml` |
 
-Low-risk drafts (typos, dates, alt text, a button link moved to an existing page) are the ones a team could later publish after a sampled check. Every customer-facing wording change is standard risk and read in full.
+Low-risk drafts (typos, dates, alt text, a button link moved to an existing page) are the ones a team could later publish after a sampled check. Every customer-facing wording change is standard risk and goes through the customer's normal review chain, compliance included where their rules require it, with the agent's check results attached.
 
 ## The eval
 
@@ -50,7 +50,8 @@ GOLIVE_LIVE=1 golive run evals/tickets/golive.live.yml
 
 - Secrets: `ANTHROPIC_API_KEY`, `CONTENTFUL_CMA_TOKEN`. Variable: `CONTENTFUL_SPACE_ID`.
 - **Record a live run** (Actions tab) seeds the space, runs the 30 tickets 3 times live, refuses a partial or failing run, rebuilds the demo page from the recording and publishes it.
-- File an issue from the **Page change request** form to watch the agent answer it.
+- File an issue from the **Page change request** form to watch the agent answer it. The form applies the `change-request` label, which the record run creates (or run `gh label create change-request` once).
+- Requests run one at a time. GitHub keeps only one waiting run, so if several arrive at once only the newest waits; edit a skipped issue's request text to run it again.
 
 ## Limits
 

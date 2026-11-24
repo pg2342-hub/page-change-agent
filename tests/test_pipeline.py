@@ -72,3 +72,23 @@ class FlakyCMS(FakeCMS):
 def test_a_draft_that_reads_back_wrong_goes_to_compliance():
     r = handle({"page_id": "vision", "request": "x"}, editor(headline="New"), FlakyCMS())
     assert r["label"] == COMPLIANCE and r["stopped_by"] == "read-back mismatch" and r["cms"]["readback_match"] is False
+
+
+def test_an_edit_the_agent_calls_high_risk_goes_to_compliance():
+    cms = FakeCMS()
+    r = handle({"page_id": "vision", "request": "x"}, editor(risk="high", headline="New headline"), cms)
+    assert r["label"] == COMPLIANCE and r["stopped_by"] == "agent" and not r["cms"]["written"]
+
+
+def test_a_cms_refusal_is_reported_not_raised():
+    class Refusing(FakeCMS):
+        def save_draft(self, *a, **k):
+            raise CMSError("409 version conflict")
+
+    r = handle({"page_id": "vision", "request": "x"}, editor(headline="New headline"), Refusing())
+    assert r["label"] == COMPLIANCE and r["stopped_by"] == "cms error" and "409" in r["reason"]
+
+
+def test_a_bad_date_is_blocked_before_it_reaches_the_cms():
+    r = handle({"page_id": "vision", "request": "x"}, editor(updated_on="next Tuesday"), FakeCMS())
+    assert r["stopped_by"] == "guardrail" and not r["cms"]["written"]

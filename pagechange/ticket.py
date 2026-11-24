@@ -71,8 +71,15 @@ def comment(result: dict) -> str:
             "missing page": "The page does not exist",
             "no change": "The draft changed nothing",
             "read-back mismatch": "The saved draft did not match",
+            "cms error": "The CMS refused the draft",
+            "agent error": "The agent could not finish this request",
         }.get(result["stopped_by"], "Sent to compliance")
-        lines.append(f"**Needs compliance.** {who}; nothing was saved.")
+        saved = (
+            "an unpublished draft was saved but needs checking in the CMS"
+            if result["cms"].get("written")
+            else "nothing was saved"
+        )
+        lines.append(f"**Needs compliance.** {who}; {saved}.")
     lines += ["", f"> {result['reason']}", ""]
     page = site.PAGES.get(t["page_id"])
     if page:
@@ -88,5 +95,8 @@ def comment(result: dict) -> str:
             lines.append(f"- {mark}: {f['label']}" + (f" ({f['detail']})" if f["detail"] else ""))
         lines += ["", "</details>"]
     cost = result.get("cost_usd") or 0
-    lines += ["", f"<sub>{result.get('model') or 'baseline'} · ${cost:.4f} · {result['latency_s']:.1f} s</sub>"]
+    lines += [
+        "",
+        f"<sub>{result.get('model') or 'baseline'} · ${cost:.4f} · {result.get('latency_s', 0):.1f} s</sub>",
+    ]
     return "\n".join(lines)

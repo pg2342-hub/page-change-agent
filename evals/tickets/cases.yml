@@ -8,8 +8,8 @@
 - id: l02
   group: low
   title: Dental page reviewed, new date
-  input: {page_id: dental, part: last-updated date, request: "We reviewed this page today. Set the last-updated date to December 1, 2026."}
-  expected: {decision: edit, risk: low, fields: [updated_on], equals: {updated_on: "2026-12-01"}}
+  input: {page_id: dental, part: last-updated date, request: "We reviewed this page on November 23, 2026. Set the last-updated date to that day."}
+  expected: {decision: edit, risk: low, fields: [updated_on], equals: {updated_on: "2026-11-23"}}
 - id: l03
   group: low
   title: Annuity button goes to a dead page

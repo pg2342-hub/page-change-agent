@@ -51,7 +51,8 @@ def handle(ticket: dict, editor: Callable[[dict, dict | None], dict], cms: Any) 
             stopped_by="missing page", risk="high", reason=f"No page {page_id!r} on the site. " + result["reason"]
         )
         return _done(result, start)
-    if proposal["decision"] == "send_to_review":
+    if proposal["decision"] == "send_to_review" or proposal.get("risk") == "high":
+        # An edit the agent itself calls high risk is not drafted: high risk always means compliance.
         result.update(stopped_by="agent", risk="high")
         return _done(result, start)
 
@@ -75,8 +76,12 @@ def handle(ticket: dict, editor: Callable[[dict, dict | None], dict], cms: Any) 
         return _done(result, start)
 
     version = current["version"]
-    new_version = cms.save_draft(page_id, after, version)
-    back = cms.get(page_id)
+    try:
+        new_version = cms.save_draft(page_id, after, version)
+        back = cms.get(page_id)
+    except CMSError as err:
+        result.update(stopped_by="cms error", risk="high", reason=f"The CMS refused the draft: {err}")
+        return _done(result, start)
     match = all(back["fields"].get(k) == after.get(k) for k in result["changed"])
     result["label"] = READY if match else COMPLIANCE
     result["cms"].update(

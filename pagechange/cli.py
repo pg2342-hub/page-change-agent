@@ -53,7 +53,19 @@ def main(argv: list[str] | None = None) -> int:
     from .cms import ContentfulCMS, FakeCMS
 
     cms = ContentfulCMS() if os.environ.get("CONTENTFUL_CMA_TOKEN") else FakeCMS()
-    result = handle(ticket, ClaudeEditor(), cms)
+    try:
+        result = handle(ticket, ClaudeEditor(), cms)
+    except Exception as err:  # noqa: BLE001  any failure still gets a reply on the issue
+        result = {
+            "ticket": ticket,
+            "label": "needs-compliance",
+            "risk": "high",
+            "stopped_by": "agent error",
+            "reason": f"{type(err).__name__}: {err}",
+            "cms": {"system": cms.name, "written": False, "published": False},
+            "findings": [],
+            "latency_s": 0.0,
+        }
     (out / "comment.md").write_text(comment(result))
     labels = [result["label"]] + ([f"risk:{result['risk']}"] if result["label"] == "ready-for-approval" else [])
     (out / "labels.txt").write_text("\n".join(labels) + "\n")

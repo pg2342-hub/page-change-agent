@@ -123,6 +123,7 @@ def check(page_id: str, before: dict, after: dict) -> list[Finding]:
             "Last-updated date is a real date (YYYY-MM-DD)",
             bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", date)),
             "" if re.fullmatch(r"\d{4}-\d{2}-\d{2}", date) else f"got {date!r}",
+            blocking=True,
         )
     )
     return out

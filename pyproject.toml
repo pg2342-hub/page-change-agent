@@ -7,7 +7,7 @@ name = "page-change-agent"
 version = "0.1.0"
 description = "An AI agent that turns website change requests into reviewed CMS drafts, with compliance checks and a before/after diff"
 requires-python = ">=3.10"
-dependencies = ["golive-gate[claude]>=0.1.1,<0.2", "pyyaml>=6", "requests>=2.31"]
+dependencies = ["golive-gate[claude]==0.1.1", "pyyaml>=6", "requests>=2.31"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6"]

@@ -123,6 +123,26 @@ ul.lim li{margin-bottom:10px}
 <p class="lead">A marketing team files a website change as a GitHub issue. A Claude agent reads the page from the CMS, drafts the edit as an unpublished draft, checks it against the site's compliance rules, and replies with a before and after diff. Anything risky goes to compliance instead. A person still clicks publish.</p>
 </div>
 
+<section id="eval">
+  <h2>Does it pass the go-live gate?</h2>
+  <div class="verdict">
+    <div class="vhead"><h3>Same 30 tickets, same rules</h3><p>A ticket counts only if it is right on all 3 runs. Gate: no critical error; {{RULES}}.</p></div>
+    <div class="vrow">
+      <div class="vwho"><b>Claude agent</b><span>Draft, checks, save, read back</span></div>
+      <div class="strip" role="group" aria-label="Claude agent: every ticket">{{S_CELLS}}</div>
+      <div class="vscore"><b>{{S_PASS}}</b><span>of 30 right<br>{{S_CRIT}} critical</span></div>
+      {{S_GATE}}
+    </div>
+    <div class="vrow">
+      <div class="vwho"><b>Literal baseline</b><span>Pastes the copy where the form says, calls it low risk</span></div>
+      <div class="strip" role="group" aria-label="Literal baseline: every ticket">{{B_CELLS}}</div>
+      <div class="vscore"><b>{{B_PASS}}</b><span>of 30 right<br>{{B_CRIT}} critical</span></div>
+      {{B_GATE}}
+    </div>
+    <div class="legend"><span><i class="pass"></i>Right</span><span><i class="fail"></i>Wrong</span><span><i class="crit"></i>Critical: a draft saved that should have gone to compliance, a lost disclosure, a banned claim saved, a draft that did not read back, or customer copy called low risk</span><span>Select a square to open that ticket.</span></div>
+  </div>
+</section>
+
 <section class="desk" id="tool" aria-label="Change request queue">
   <div class="queue">
     <h2>30 change requests, recorded live</h2>
@@ -140,30 +160,11 @@ ul.lim li{margin-bottom:10px}
 <div class="content">
 <section id="route">
   <h2>Where {{TOTAL}} tickets went</h2>
-  <p class="point">The 30 requests ran 3 times each against a real Contentful space. Every draft was saved unpublished and read back: <b>{{WRITTEN}}</b> drafts saved, <b>{{MATCHED}}</b> read back exactly as sent, <b>{{PUBLISHED}}</b> published.</p>
+  <p class="point">The 30 requests ran 3 times each against a real Contentful space. {{READBACK}}: <b>{{WRITTEN}}</b> drafts saved, <b>{{MATCHED}}</b> read back exactly as sent, <b>{{PUBLISHED}}</b> published.</p>
   {{CHART}}
   <p class="note">Checks stopped {{GUARD}} drafts the agent tried to make, before anything was saved. Median agent time {{LAT}} per ticket, {{COST}} per ticket with {{MODEL}}.</p>
 </section>
 
-<section id="eval">
-  <h2>The eval behind it</h2>
-  <div class="verdict">
-    <div class="vhead"><h3>Same 30 tickets, same rules</h3><p>A ticket counts only if it is right on all 3 runs. Gate: no critical error; {{RULES}}.</p></div>
-    <div class="vrow">
-      <div class="vwho"><b>Claude agent</b><span>Draft, checks, save, read back</span></div>
-      <div class="strip" role="group" aria-label="Claude agent: every ticket">{{S_CELLS}}</div>
-      <div class="vscore"><b>{{S_PASS}}</b><span>of 30 right<br>{{S_CRIT}} critical</span></div>
-      {{S_GATE}}
-    </div>
-    <div class="vrow">
-      <div class="vwho"><b>Literal baseline</b><span>Pastes the copy where the form says, calls it low risk</span></div>
-      <div class="strip" role="group" aria-label="Literal baseline: every ticket">{{B_CELLS}}</div>
-      <div class="vscore"><b>{{B_PASS}}</b><span>of 30 right<br>{{B_CRIT}} critical</span></div>
-      {{B_GATE}}
-    </div>
-    <div class="legend"><span><i class="pass"></i>Right</span><span><i class="fail"></i>Wrong</span><span><i class="crit"></i>Critical: a draft that should have gone to compliance, a lost disclosure, or customer copy called low risk</span><span>Select a square to open that ticket.</span></div>
-  </div>
-</section>
 
 <section id="how">
   <h2>How it works</h2>
@@ -225,7 +226,7 @@ function show(id, scroll){
     h += `<h3>Draft</h3><ul class="chg">` + t.changes.map(c => `<li><span class="f">${esc(c.field)}</span><span>${c.diff}</span></li>`).join("") + `</ul>`;
     h += `<p class="note">${esc(t.reason)}</p>`;
   } else {
-    h += `<div class="stop"><b>${esc(t.who)}. Nothing was saved.</b><p>${esc(t.reason)}</p></div>`;
+    h += `<div class="stop"><b>${esc(t.who)}. ${t.cms.written ? "A draft was saved; check it in the CMS." : "Nothing was saved."}</b><p>${esc(t.reason)}</p></div>`;
   }
   if (t.findings.length) {
     h += `<h3>Checks</h3><ul class="chk">` + t.findings.map(f => `<li>${f.ok ? OK : NO}<span>${esc(f.label)}${f.detail ? ` <span class="d">(${esc(f.detail)})</span>` : ""}</span></li>`).join("") + `</ul>`;

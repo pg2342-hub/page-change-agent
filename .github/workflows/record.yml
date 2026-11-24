@@ -11,8 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: change-requests  # shares the Contentful space with the issue handler
     env:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      CONTENTFUL_CMA_TOKEN: ${{ secrets.CONTENTFUL_CMA_TOKEN }}
       CONTENTFUL_SPACE_ID: ${{ vars.CONTENTFUL_SPACE_ID }}
     steps:
       - uses: actions/checkout@v4
@@ -20,14 +18,26 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e .
+      - name: Create the change-request label the issue form applies
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh label create change-request --color 1d4ed8 --force -R "$GITHUB_REPOSITORY"
       - name: Check the keys are set
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CONTENTFUL_CMA_TOKEN: ${{ secrets.CONTENTFUL_CMA_TOKEN }}
         run: |
           test -n "$ANTHROPIC_API_KEY" || (echo "Add the ANTHROPIC_API_KEY repo secret first" && exit 1)
           test -n "$CONTENTFUL_CMA_TOKEN" || (echo "Add the CONTENTFUL_CMA_TOKEN repo secret first" && exit 1)
           test -n "$CONTENTFUL_SPACE_ID" || (echo "Add the CONTENTFUL_SPACE_ID repo variable first" && exit 1)
       - name: Create the content type and the ten pages in Contentful
+        env:
+          CONTENTFUL_CMA_TOKEN: ${{ secrets.CONTENTFUL_CMA_TOKEN }}
         run: page-change-agent seed --yes
       - name: Live run, 30 tickets x 3, with the judge
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CONTENTFUL_CMA_TOKEN: ${{ secrets.CONTENTFUL_CMA_TOKEN }}
         run: |
           rm -f recordings/*.jsonl
           GOLIVE_LIVE=1 golive run evals/tickets/golive.live.yml --out reports/tickets && rc=0 || rc=$?
@@ -36,6 +46,8 @@ jobs:
           test "$(wc -l < recordings/tickets_agent.jsonl)" -eq 90
           test "$rc" = "0" || (echo "The live run did not pass; nothing published." && exit 1)
       - name: Put the pages back to their starting copy
+        env:
+          CONTENTFUL_CMA_TOKEN: ${{ secrets.CONTENTFUL_CMA_TOKEN }}
         run: page-change-agent seed --yes
       - name: Rebuild the demo page from the recordings
         run: python scripts/build_demo.py
@@ -47,7 +59,7 @@ jobs:
           git commit -m "Record a live run and rebuild the demo"
           git push
           git fetch origin gh-pages || true
-          parent=$(git rev-parse -q --verify origin/gh-pages && echo "-p origin/gh-pages" || true)
+          parent=$(git rev-parse -q --verify origin/gh-pages >/dev/null && echo "-p origin/gh-pages" || true)
           c=$(git commit-tree "$(git rev-parse HEAD:docs)" $parent -m "Publish the demo page")
           git push origin "$c:refs/heads/gh-pages"
       - name: Run CI on the new commit (pushes made by this workflow do not trigger it)

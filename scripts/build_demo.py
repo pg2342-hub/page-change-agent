@@ -3,7 +3,7 @@
     python scripts/build_demo.py              # from recordings/ (what CI and Pages use)
     python scripts/build_demo.py --preview    # layout check only: hand-written answers, written to /tmp
 
-Every number on the page comes from the graded run. Run demo_chrome afterwards is built in (see chrome()).
+Every number on the page comes from the graded run. The shared header and footer come from demo_chrome.chrome().
 """
 
 from __future__ import annotations
@@ -32,6 +32,7 @@ WHO = {
     "missing page": "No such page on the site",
     "no change": "The draft changed nothing",
     "read-back mismatch": "The saved draft did not match",
+    "cms error": "The CMS refused the draft",
 }
 PARTS = {"low": "Low risk", "standard": "Customer-facing copy", "review": "Needs compliance"}
 
@@ -252,6 +253,9 @@ def build(preview: bool) -> str:
         "{{PUBLISHED}}": str(published),
         "{{CMS}}": e(cms_name),
         "{{GUARD}}": str(n["guardrail"]),
+        "{{READBACK}}": "Every saved draft was unpublished and read back exactly"
+        if matched == written and published == 0
+        else "Not every saved draft read back cleanly",
     }
     for k, v in subs.items():
         page = page.replace(k, v)

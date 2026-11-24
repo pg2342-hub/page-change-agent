@@ -54,7 +54,10 @@ def render(ticket: dict, page: dict | None) -> str:
     if page is not None:
         fine_print = "\n".join(f"{d}: {site.DISCLOSURES[d]}" for d in page["disclosure_ids"]) or "(none)"
         shown += f"\n\nFine print on this page:\n{fine_print}"
-    parts = [f"Page id: {ticket['page_id']}", f"Request: {ticket['request']}"]
+    parts = [f"Page id: {ticket['page_id']}"]
+    if ticket.get("part"):
+        parts.append(f"Part of the page (from the form): {ticket['part']}")
+    parts.append(f"Request: {ticket['request']}")
     if ticket.get("new_copy"):
         parts.append(f"New copy supplied by the requester: {ticket['new_copy']}")
     return "\n".join(parts) + f"\n\n<page>\n{shown}\n</page>"
