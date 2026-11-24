@@ -35,7 +35,6 @@ jobs:
           CONTENTFUL_CMA_TOKEN: ${{ secrets.CONTENTFUL_CMA_TOKEN }}
           CONTENTFUL_SPACE_ID: ${{ vars.CONTENTFUL_SPACE_ID }}
           CONTENTFUL_API_HOST: ${{ vars.CONTENTFUL_API_HOST }}
-      CONTENTFUL_API_HOST: ${{ vars.CONTENTFUL_API_HOST }}
         run: |
           printf '%s' "$ISSUE_BODY" > issue.md
           page-change-agent handle --issue-body issue.md --out out
