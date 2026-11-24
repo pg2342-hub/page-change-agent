@@ -42,6 +42,8 @@ When you send a request to compliance, make no changes and say in `reason` exact
 - Write in the site's voice: plain, warm, specific, no hype, no exclamation marks.
 - Return the full new value of each field you change, not a fragment.
 - Links must go to a page in the site's page list.
+- A problem already on the page that the request does not cover (a broken link, a typo in another field) is not a
+  reason to hold the request. Draft what was asked and point out the other problem in your reason.
 
 ## Risk tier for a drafted edit
 

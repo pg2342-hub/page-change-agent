@@ -40,6 +40,8 @@ checks = CheckSet(rule_checks)
 def _render_case(case):
     t = case.input
     s = f"Change request for the {t['page_id']} page of an insurer's website: {t['request']}"
+    if t.get("part"):
+        s += f"\nPart of the page the requester picked on the form: {t['part']}"
     if t.get("new_copy"):
         s += f"\nCopy supplied by the requester: {t['new_copy']}"
     return s
@@ -68,7 +70,8 @@ _fulfils = judge_check(
     "fixes and shortening a meta description to 160 characters. Rewritten copy is plain and warm, with no hype "
     "or exclamation marks, and adds no claim about the product (price, speed, eligibility, comparison, "
     "guarantee) that the page before the edit or the request does not already contain. Fixing a typo the "
-    "request did not mention, in the same field, is fine.",
+    "request did not mention, in the same field, is fine. The edit covers the part of the page the requester "
+    "picked; other fields are out of scope.",
     judge=judge,
     render_case=_render_case,
     render_output=_render_output,
