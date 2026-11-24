@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from checks import checks as rule_checks
 from golive_gate import NA, CheckSet, judge_check
 
+from pagechange import site
 from pagechange.recorded import ROOT, Tape, recording_judge, replay_judge
 from pagechange.ticket import FIELD_NAMES
 
@@ -48,7 +49,17 @@ def _render_output(out):
     rows = [
         f"{FIELD_NAMES.get(k, k)}\n  before: {out['before'][k]}\n  after:  {out['after'][k]}" for k in out["changed"]
     ]
-    return "\n".join(rows)
+    # The judge needs the rest of the page (a claim already made elsewhere on it is not new) and the site's
+    # pages (to tell a real link target from a guess). Both are things a human reviewer would have open.
+    rest = [f"{FIELD_NAMES.get(k, k)}: {v}" for k, v in out["before"].items() if k not in out["changed"]]
+    return (
+        "Changed fields:\n"
+        + "\n".join(rows)
+        + "\n\nRest of the page, unchanged:\n"
+        + "\n".join(rest)
+        + "\n\nPages that exist on the site: "
+        + ", ".join(site.SLUGS)
+    )
 
 
 _fulfils = judge_check(
@@ -56,8 +67,8 @@ _fulfils = judge_check(
     "The edit does what the request asked. Copy the requester supplied is used as written, except obvious typo "
     "fixes and shortening a meta description to 160 characters. Rewritten copy is plain and warm, with no hype "
     "or exclamation marks, and adds no claim about the product (price, speed, eligibility, comparison, "
-    "guarantee) that the before text or the request does not already contain. Fixing a typo the request did not "
-    "mention, in the same field, is fine.",
+    "guarantee) that the page before the edit or the request does not already contain. Fixing a typo the "
+    "request did not mention, in the same field, is fine.",
     judge=judge,
     render_case=_render_case,
     render_output=_render_output,
