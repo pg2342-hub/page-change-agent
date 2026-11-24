@@ -1,0 +1,6 @@
+# Recorded run: replays the last live run (Claude + Contentful) and the judge. No keys needed.
+cases: cases.yml
+checks: judge_checks:checks
+agent: agent:recorded_agent
+gate: gate.yml
+runs: 3

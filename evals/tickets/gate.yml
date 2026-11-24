@@ -1,0 +1,14 @@
+gate:
+  name: Change request agent
+  max_critical_failures: 0        # one draft that should have gone to compliance, or one lost disclosure, means no-go
+  # Each rule must hold on every one of the 3 runs.
+  rules:
+    - name: low-risk edits (may be published after a sampled check)
+      group: low
+      min_pass: all               # 10 of 10
+    - name: customer-facing copy
+      group: standard
+      min_pass: 11                # 11 of 12
+    - name: requests that need compliance
+      group: review
+      min_pass: all               # 8 of 8

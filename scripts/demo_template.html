@@ -1,0 +1,254 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Page Change Agent</title>
+<meta name="description" content="A Claude agent turns website change requests into unpublished CMS drafts with compliance checks: {{S_PASS}} of 30 tickets right on all 3 runs, {{S_CRIT}} critical errors.">
+<style>
+.head{padding:8px 0 0}
+.head h1{margin:24px 0 12px}
+.head .lead{max-width:52em;margin:0}
+/* workspace: the queue on the left, the selected ticket on the right */
+.desk{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:20px 24px;align-items:start;margin-top:28px;scroll-margin-top:16px}
+.queue{border:1px solid var(--rule);border-radius:16px;background:#fbfaf6;padding:16px 16px 10px;min-width:0}
+.queue h2{all:unset;display:block;font:500 15px/1.3 var(--sans);margin:2px 4px 12px}
+.qlist{list-style:none;margin:0;padding:0;max-height:640px;overflow:auto}
+.qlist li{margin:0}
+.qi{display:grid;grid-template-columns:2.6em minmax(0,1fr) auto;gap:2px 10px;align-items:baseline;width:100%;text-align:left;padding:10px 8px;border:0;border-top:1px solid var(--rule-soft);background:transparent;border-radius:10px;font:14px/1.35 var(--sans);color:var(--ink);cursor:pointer;min-height:44px}
+.qi:hover{background:#fff}
+.qi[aria-current=true]{background:#fff;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.qi .num{font:12px/1 var(--mono);color:var(--ink-2)}
+.qi .pg{grid-column:2;font:12px/1.3 var(--mono);color:var(--ink-2);overflow-wrap:anywhere}
+.lab{display:inline-flex;align-items:center;min-height:24px;padding:0 9px;border-radius:999px;font:500 11.5px/1 var(--mono);white-space:nowrap;grid-row:1/3;grid-column:3;align-self:center}
+.lab.ready{background:var(--green-wash);color:var(--green)}
+.lab.comp{background:var(--ink);color:var(--paper)}
+.issue{border:1px solid var(--rule);border-radius:16px;background:#fff;box-shadow:0 1px 0 rgb(27 26 23/.04),0 24px 48px -32px rgb(27 26 23/.35);min-width:0;overflow:hidden}
+.ihead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px 20px;padding:22px 26px 16px;border-bottom:1px solid var(--rule)}
+.ihead h2{all:unset;display:block;font:400 26px/1.2 var(--serif)}
+.ihead .sub{font:12.5px/1.5 var(--mono);color:var(--ink-2);margin-top:6px;overflow-wrap:anywhere}
+.status{display:inline-flex;align-items:center;min-height:30px;padding:0 14px;border-radius:999px;font:500 12.5px/1 var(--mono);white-space:nowrap}
+.status.ready{background:var(--green-wash);color:var(--green)}
+.status.comp{background:var(--ink);color:var(--paper)}
+.req{padding:16px 26px;border-bottom:1px solid var(--rule);background:#fbfaf6;font-size:15px}
+.req p{margin:0}
+.req .copy{margin-top:8px;font-size:14px;color:var(--ink-2)}
+.req .copy b{color:var(--ink);font-weight:500}
+.ibody{padding:18px 26px 8px}
+.ibody h3{all:unset;display:block;font:500 14.5px/1.35 var(--sans);padding-bottom:8px;border-bottom:1px solid var(--ink);margin-top:6px}
+.chg{list-style:none;margin:0;padding:0}
+.chg li{display:grid;grid-template-columns:9.5em minmax(0,1fr);gap:4px 16px;padding:12px 0;border-bottom:1px solid var(--rule);margin:0;font-size:14.5px;line-height:1.55}
+.chg .f{font:12.5px/1.6 var(--mono);color:var(--ink-2)}
+del{text-decoration:line-through;color:var(--ink-2);background:rgb(27 26 23/.06);border-radius:3px;padding:0 2px}
+ins{text-decoration:none;background:var(--green-wash);color:var(--green-deep);border-radius:3px;padding:0 2px}
+.stop{margin:4px 0 14px;border:1.5px solid var(--ink);border-radius:12px;padding:14px 16px}
+.stop b{display:block;font:500 15px/1.35 var(--sans);margin-bottom:4px}
+.stop p{margin:0;font-size:14.5px;color:var(--ink-2)}
+.chk{list-style:none;margin:0 0 14px;padding:0;font-size:14px}
+.chk li{display:grid;grid-template-columns:1.4em minmax(0,1fr);gap:8px;padding:7px 0;border-bottom:1px solid var(--rule-soft);margin:0}
+.chk svg{width:14px;height:14px;margin-top:3px}
+.chk .d{color:var(--ink-2)}
+.foot{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 18px;padding:14px 26px;border-top:1px solid var(--rule);background:#fbfaf6;font-size:13.5px}
+.foot dt{color:var(--ink-2)}
+.foot dd{margin:0;overflow-wrap:anywhere}
+/* segmented control (from the starter) */
+.seg{display:flex;width:fit-content;max-width:100%;flex-wrap:wrap;gap:2px;padding:3px;border:1px solid var(--rule);border-radius:999px;margin:0 0 12px;background:#fbfaf6}
+.seg button{min-height:34px;padding:0 14px;border:0;border-radius:999px;background:transparent;color:var(--ink-2);font:500 14px/1 var(--sans);cursor:pointer}
+.seg button[aria-checked=true]{background:var(--ink);color:var(--paper)}
+/* page body */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:56px;align-items:start;margin-top:16px}
+.side{position:sticky;top:24px;margin-top:64px;display:grid;gap:22px;font-size:14px;color:var(--ink-2)}
+.side h3{margin:0 0 6px;font:500 13px/1.3 var(--sans);color:var(--ink)}
+.side p{margin:0}
+.side nav a{display:block;padding:5px 0;color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--rule-soft)}
+.side nav a:hover{color:var(--ink)}
+.side pre{font-size:12px;margin:6px 0 0;white-space:pre-wrap}
+.content section{scroll-margin-top:16px}
+.point{font-size:17px;max-width:42em;margin:0 0 20px}
+.note{color:var(--ink-2);font-size:15px;max-width:44em;margin-top:14px}
+svg.route{display:block;width:100%;height:auto;font:400 20px/1 var(--serif);font-variant-numeric:tabular-nums}
+.rkey{list-style:none;display:flex;flex-wrap:wrap;gap:8px 20px;margin:12px 0 0;padding:0;font-size:14px;color:var(--ink-2)}
+.rkey li{display:inline-flex;align-items:center;gap:8px;margin:0}
+.rkey i{width:14px;height:14px;border-radius:3px;border:1px solid var(--ink)}
+.rkey b{color:var(--ink);font-weight:500}
+.verdict{border:1px solid var(--rule);border-radius:16px;background:#fbfaf6;overflow:hidden}
+.vhead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px;padding:18px 24px;border-bottom:1px solid var(--rule)}
+.vhead h3{all:unset;font:400 22px/1.2 var(--serif)}
+.vhead p{margin:0;color:var(--ink-2);font-size:14.5px;max-width:34em}
+.vrow{display:grid;grid-template-columns:minmax(0,10em) minmax(0,1fr) 6.5em 5.5em;align-items:center;gap:20px;padding:22px 24px}
+.vrow+.vrow{border-top:1px solid var(--rule-soft)}
+.vwho b{display:block;font:400 20px/1.2 var(--serif)}
+.vwho span{display:block;color:var(--ink-2);font-size:14px;line-height:1.4;margin-top:4px}
+.strip{display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:5px}
+.cell{display:block;aspect-ratio:1;border-radius:4px;border:1.5px solid transparent;transition:transform .2s var(--ease),box-shadow .2s}
+.cell.pass{background:var(--green)}
+.cell.fail{background:var(--paper);border-color:var(--ink)}
+.cell.crit{background:var(--ink)}
+.cell:hover,.cell:focus-visible{transform:translateY(-3px);box-shadow:0 6px 12px -6px rgb(27 26 23/.5)}
+.vscore b{font:400 44px/1 var(--serif);font-variant-numeric:tabular-nums}
+.vscore span{display:block;color:var(--ink-2);font-size:13px;line-height:1.35;margin-top:4px}
+.gate{justify-self:end;display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:0 14px;border-radius:999px;font:500 13px/1 var(--mono);letter-spacing:.06em}
+.gate.go{background:var(--green-wash);color:var(--green)}
+.gate.nogo{background:var(--ink);color:var(--paper)}
+.gate.part{border:1.5px dashed var(--ink);color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 20px;padding:14px 24px;border-top:1px solid var(--rule);color:var(--ink-2);font-size:13px}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend i{width:12px;height:12px;border-radius:3px;border:1.5px solid transparent}
+.legend .pass{background:var(--green)}.legend .fail{border-color:var(--ink)}.legend .crit{background:var(--ink)}
+.steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.step{border:1px solid var(--rule);border-radius:16px;background:#fbfaf6;padding:18px 20px;min-width:0}
+.step h3{margin:0 0 6px;font:400 21px/1.25 var(--serif);display:flex;gap:10px;align-items:baseline}
+.step h3 span{font:400 15px/1 var(--serif);color:var(--green);min-width:12px}
+.step p{margin:0;font-size:14.5px;color:var(--ink-2)}
+.step p b{color:var(--ink)}
+ul.lim{margin:0;padding-left:20px;max-width:46em}
+ul.lim li{margin-bottom:10px}
+@media (max-width:1000px){
+ .layout{grid-template-columns:minmax(0,1fr);gap:0}
+ .side{position:static;margin-top:48px}
+ .vrow{grid-template-columns:minmax(0,1fr) auto;gap:14px 16px}
+ .vrow .strip{grid-column:1/-1;grid-row:2}
+ .vscore{grid-row:3}.vrow .gate{grid-row:3}
+}
+@media (max-width:860px){.desk{grid-template-columns:minmax(0,1fr)}.qlist{max-height:300px}}
+@media (max-width:640px){
+ .ihead{padding:18px 18px 14px}.ihead h2{font-size:22px}
+ .req,.ibody,.foot{padding-left:18px;padding-right:18px}
+ .chg li{grid-template-columns:minmax(0,1fr)}
+ .foot{grid-template-columns:minmax(0,1fr);gap:0}.foot dd+dt{margin-top:6px}
+ .steps{grid-template-columns:minmax(0,1fr)}
+ .vrow{padding:18px}.vhead{padding:16px 18px}.strip{gap:2px}
+}
+@media (prefers-reduced-motion:reduce){.cell{transition:none}}
+</style></head><body><main>
+
+<div class="head">
+<h1>Page Change Agent</h1>
+<p class="lead">A marketing team files a website change as a GitHub issue. A Claude agent reads the page from the CMS, drafts the edit as an unpublished draft, checks it against the site's compliance rules, and replies with a before and after diff. Anything risky goes to compliance instead. A person still clicks publish.</p>
+</div>
+
+<section class="desk" id="tool" aria-label="Change request queue">
+  <div class="queue">
+    <h2>30 change requests, recorded live</h2>
+    <div class="seg" role="radiogroup" aria-label="Show">
+      <button type="button" role="radio" aria-checked="true" data-f="all">All</button>
+      <button type="button" role="radio" aria-checked="false" data-f="ready">Ready</button>
+      <button type="button" role="radio" aria-checked="false" data-f="comp">Compliance</button>
+    </div>
+    <ul class="qlist" id="qlist"></ul>
+  </div>
+  <article class="issue" id="issue" aria-live="polite"></article>
+</section>
+
+<div class="layout">
+<div class="content">
+<section id="route">
+  <h2>Where {{TOTAL}} tickets went</h2>
+  <p class="point">The 30 requests ran 3 times each against a real Contentful space. Every draft was saved unpublished and read back: <b>{{WRITTEN}}</b> drafts saved, <b>{{MATCHED}}</b> read back exactly as sent, <b>{{PUBLISHED}}</b> published.</p>
+  {{CHART}}
+  <p class="note">Checks stopped {{GUARD}} drafts the agent tried to make, before anything was saved. Median agent time {{LAT}} per ticket, {{COST}} per ticket with {{MODEL}}.</p>
+</section>
+
+<section id="eval">
+  <h2>The eval behind it</h2>
+  <div class="verdict">
+    <div class="vhead"><h3>Same 30 tickets, same rules</h3><p>A ticket counts only if it is right on all 3 runs. Gate: no critical error; {{RULES}}.</p></div>
+    <div class="vrow">
+      <div class="vwho"><b>Claude agent</b><span>Draft, checks, save, read back</span></div>
+      <div class="strip" role="group" aria-label="Claude agent: every ticket">{{S_CELLS}}</div>
+      <div class="vscore"><b>{{S_PASS}}</b><span>of 30 right<br>{{S_CRIT}} critical</span></div>
+      {{S_GATE}}
+    </div>
+    <div class="vrow">
+      <div class="vwho"><b>Literal baseline</b><span>Pastes the copy where the form says, calls it low risk</span></div>
+      <div class="strip" role="group" aria-label="Literal baseline: every ticket">{{B_CELLS}}</div>
+      <div class="vscore"><b>{{B_PASS}}</b><span>of 30 right<br>{{B_CRIT}} critical</span></div>
+      {{B_GATE}}
+    </div>
+    <div class="legend"><span><i class="pass"></i>Right</span><span><i class="fail"></i>Wrong</span><span><i class="crit"></i>Critical: a draft that should have gone to compliance, a lost disclosure, or customer copy called low risk</span><span>Select a square to open that ticket.</span></div>
+  </div>
+</section>
+
+<section id="how">
+  <h2>How it works</h2>
+  <div class="steps">
+    <div class="step"><h3><span>1</span>File</h3><p><b>An issue form.</b> Page, part of the page, what should change, and new copy if there is any. Only people with write access trigger the agent.</p></div>
+    <div class="step"><h3><span>2</span>Draft</h3><p><b>Claude reads the page from the CMS</b> and either proposes field edits with a risk tier or sends the request to compliance with a reason. Structured output, so the reply always has the same shape.</p></div>
+    <div class="step"><h3><span>3</span>Check</h3><p><b>Rules the model cannot talk past.</b> Disclosures stay, no banned claims (guarantees, lowest price, no risk), rates are not edited, links go to real pages, meta descriptions fit, alt text is real.</p></div>
+    <div class="step"><h3><span>4</span>Save</h3><p><b>An unpublished draft</b> through the Contentful Management API, with the page's version number so two edits cannot overwrite each other, then read back and compared. The issue gets the diff and a label.</p></div>
+  </div>
+</section>
+
+<section id="limits">
+  <h2>Limits</h2>
+  <ul class="lim">
+    <li>The website is invented: ten pages for a made-up insurer, with disclosure rules written for this demo. A real deployment starts from the customer's own content model and compliance rules.</li>
+    <li>Contentful stands in for the CMS. Enterprise sites often run Adobe Experience Manager, which needs its own connector.</li>
+    <li>The risk tiers are a starting point. Which edits may skip a full read should be agreed with the customer's compliance team and checked on real tickets first.</li>
+    <li>A judge model grades whether each draft does what was asked; rules grade everything else.</li>
+  </ul>
+</section>
+</div>
+
+<aside class="side" aria-label="About this build">
+  <nav aria-label="On this page"><a href="#tool">The queue</a><a href="#route">Where tickets went</a><a href="#eval">The eval</a><a href="#how">How it works</a><a href="#limits">Limits</a></nav>
+  <div><h3>Data</h3><p>The insurer, its ten pages, rates and disclosures are invented. The 30 change requests are written for this demo. The drafts were made by {{MODEL}} and saved to a real Contentful space ({{CMS}}); this page replays that recorded run.</p></div>
+  <div><h3>Run it yourself</h3><p>Python 3.10+. Tests and the recorded eval need no keys.</p><pre>pip install -e ".[dev]"
+pytest -q
+golive run evals/tickets/golive.yml</pre></div>
+  <div><a class="pill" href="https://github.com/pg2342-hub/page-change-agent">Code on GitHub</a></div>
+</aside>
+</div>
+</main>
+<script id="tickets" type="application/json">{{DATA}}</script>
+<script>
+const T = JSON.parse(document.getElementById("tickets").textContent);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ready = t => t.label === "ready-for-approval";
+const OK = '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7.5 5.5 11 12 3.5" fill="none" stroke="var(--green)" stroke-width="2"/></svg>';
+const NO = '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 3 11 11M11 3 3 11" fill="none" stroke="var(--ink)" stroke-width="2"/></svg>';
+let filter = "all", current = T[0].id;
+
+function list(){
+  $("#qlist").innerHTML = T.filter(t => filter === "all" || (filter === "ready") === ready(t)).map((t, i) =>
+    `<li><button type="button" class="qi" data-id="${t.id}" aria-current="${t.id === current}">
+      <span class="num">${esc(t.id)}</span><span>${esc(t.title)}</span>
+      <span class="lab ${ready(t) ? "ready" : "comp"}">${ready(t) ? "ready" : "compliance"}</span>
+      <span class="pg">${esc(t.page)}</span></button></li>`).join("");
+  document.querySelectorAll(".qi").forEach(b => b.addEventListener("click", () => show(b.dataset.id)));
+}
+
+function show(id, scroll){
+  current = id; const t = T.find(x => x.id === id);
+  document.querySelectorAll(".qi").forEach(b => b.setAttribute("aria-current", String(b.dataset.id === id)));
+  let h = `<header class="ihead"><div><h2>${esc(t.title)}</h2><div class="sub">${esc(t.page)} · ${esc(t.part)}${ready(t) ? " · " + esc(t.risk) + " risk" : ""}</div></div>
+    <span class="status ${ready(t) ? "ready" : "comp"}">${ready(t) ? "Ready for approval" : "Needs compliance"}</span></header>`;
+  h += `<div class="req"><p>${esc(t.request)}</p>${t.new_copy ? `<p class="copy"><b>New copy:</b> ${esc(t.new_copy)}</p>` : ""}</div><div class="ibody">`;
+  if (ready(t)) {
+    h += `<h3>Draft</h3><ul class="chg">` + t.changes.map(c => `<li><span class="f">${esc(c.field)}</span><span>${c.diff}</span></li>`).join("") + `</ul>`;
+    h += `<p class="note">${esc(t.reason)}</p>`;
+  } else {
+    h += `<div class="stop"><b>${esc(t.who)}. Nothing was saved.</b><p>${esc(t.reason)}</p></div>`;
+  }
+  if (t.findings.length) {
+    h += `<h3>Checks</h3><ul class="chk">` + t.findings.map(f => `<li>${f.ok ? OK : NO}<span>${esc(f.label)}${f.detail ? ` <span class="d">(${esc(f.detail)})</span>` : ""}</span></li>`).join("") + `</ul>`;
+  }
+  h += `</div><dl class="foot">`;
+  if (t.cms.written) h += `<dt>Saved</dt><dd>${esc(t.cms.system)}, unpublished draft, version ${t.cms.version_before} to ${t.cms.version_after}, ${t.cms.readback_match ? "read back and matched" : "did not match on read back"}</dd>`;
+  h += `<dt>Agent</dt><dd>${esc(t.model)}, ${t.latency.toFixed(1)} s, $${t.cost.toFixed(4)}</dd>`;
+  const right = t.runs.filter(r => r.passed).length;
+  h += `<dt>Graded</dt><dd>Right on ${right} of ${t.runs.length} runs${t.stable ? ", same outcome every run" : ""}${right < t.runs.length ? ": " + esc(t.runs.flatMap(r => r.failed).slice(0, 2).join("; ")) : ""}</dd></dl>`;
+  $("#issue").innerHTML = h;
+  if (scroll) $("#tool").scrollIntoView({behavior: matchMedia("(prefers-reduced-motion:reduce)").matches ? "auto" : "smooth"});
+}
+
+document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-checked", String(x === b)));
+  filter = b.dataset.f; list();
+  const vis = T.filter(t => filter === "all" || (filter === "ready") === ready(t));
+  if (vis.length && !vis.some(t => t.id === current)) show(vis[0].id);
+}));
+document.querySelectorAll(".cell").forEach(c => c.addEventListener("click", ev => {
+  ev.preventDefault();
+  filter = "all"; document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-checked", String(x.dataset.f === "all")));
+  list(); show(c.dataset.case, true);
+}));
+list(); show(current);
+</script></body></html>

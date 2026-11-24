@@ -1,0 +1,43 @@
+name: Handle a change request
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  handle:
+    # Only requests filed from the form by people with write access run the agent (it spends API credit).
+    if: >-
+      contains(github.event.issue.labels.*.name, 'change-request') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association)
+    runs-on: ubuntu-latest
+    concurrency: change-requests  # one at a time, so two drafts never race on the same page version
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      CONTENTFUL_CMA_TOKEN: ${{ secrets.CONTENTFUL_CMA_TOKEN }}
+      CONTENTFUL_SPACE_ID: ${{ vars.CONTENTFUL_SPACE_ID }}
+      GH_TOKEN: ${{ github.token }}
+      ISSUE_BODY: ${{ github.event.issue.body }}
+      ISSUE: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: Draft the change (or send it to compliance)
+        run: |
+          printf '%s' "$ISSUE_BODY" > issue.md
+          page-change-agent handle --issue-body issue.md --out out
+      - name: Reply on the issue and label it
+        run: |
+          gh label create ready-for-approval --color 2f6b4f --force -R "$GITHUB_REPOSITORY"
+          gh label create needs-compliance --color 1f1f1f --force -R "$GITHUB_REPOSITORY"
+          gh label create risk:low --color cfe3d6 --force -R "$GITHUB_REPOSITORY"
+          gh label create risk:standard --color e8e3d3 --force -R "$GITHUB_REPOSITORY"
+          gh issue edit "$ISSUE" -R "$GITHUB_REPOSITORY" --remove-label ready-for-approval,needs-compliance,risk:low,risk:standard || true
+          gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" --body-file out/comment.md
+          while read -r label; do gh issue edit "$ISSUE" -R "$GITHUB_REPOSITORY" --add-label "$label"; done < out/labels.txt

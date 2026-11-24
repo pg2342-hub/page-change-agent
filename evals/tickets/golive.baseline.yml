@@ -1,0 +1,6 @@
+# Baseline: paste the supplied copy where the form says, call it low risk. Rule checks only. Must be no-go.
+cases: cases.yml
+checks: checks:checks
+agent: agent:literal_agent
+gate: gate.yml
+runs: 1

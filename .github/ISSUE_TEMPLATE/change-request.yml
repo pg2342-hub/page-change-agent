@@ -1,0 +1,52 @@
+name: Page change request
+description: Ask for a change to a page on the website. The agent drafts it (or sends it to compliance) and replies here.
+title: "Change request: "
+labels: [change-request]
+body:
+  - type: dropdown
+    id: page
+    attributes:
+      label: Page
+      options:
+        - term-life
+        - annuities
+        - dental
+        - vision
+        - disability
+        - accident
+        - pet
+        - group-benefits
+        - about
+        - claims
+    validations:
+      required: true
+  - type: dropdown
+    id: part
+    attributes:
+      label: Part of the page
+      options:
+        - headline
+        - body
+        - button label
+        - button link
+        - meta description
+        - image alt text
+        - last-updated date
+        - rate example
+        - fine print
+        - title
+        - not sure
+    validations:
+      required: true
+  - type: textarea
+    id: request
+    attributes:
+      label: What should change
+      description: Say what is wrong or what you need, in a sentence or two.
+    validations:
+      required: true
+  - type: textarea
+    id: new_copy
+    attributes:
+      label: New copy
+      description: Optional. Exact wording, if you have it.

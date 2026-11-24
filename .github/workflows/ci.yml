@@ -1,0 +1,42 @@
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ".[dev]"
+      - run: ruff check . && ruff format --check .
+      - run: pytest -q
+
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: The eval must block the literal baseline
+        run: |
+          golive run evals/tickets/golive.baseline.yml --out /tmp/baseline && rc=0 || rc=$?
+          echo "baseline exit code: $rc"
+          if [ "$rc" != "1" ]; then echo "expected no-go (exit 1) for the baseline" && exit 1; fi
+      - name: Recorded live run (Claude + Contentful), 30 tickets x 3
+        if: hashFiles('recordings/tickets_agent.jsonl') != ''
+        uses: pg2342-hub/golive-gate@58ed3c0ca0a91145e2cfcd33fcd7a570dafedd20
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        with:
+          config: evals/tickets/golive.yml
+          strict: "true"

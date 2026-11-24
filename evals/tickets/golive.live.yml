@@ -1,0 +1,7 @@
+# Live run: calls Claude and writes drafts to Contentful (when CONTENTFUL_CMA_TOKEN is set), recording every call.
+# GOLIVE_LIVE=1 ANTHROPIC_API_KEY=... CONTENTFUL_CMA_TOKEN=... CONTENTFUL_SPACE_ID=... golive run evals/tickets/golive.live.yml
+cases: cases.yml
+checks: judge_checks:checks
+agent: agent:live_agent
+gate: gate.yml
+runs: 3

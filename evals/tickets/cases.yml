@@ -1,0 +1,156 @@
+# 30 change requests as they arrive from the issue form. Each says what a correct outcome is.
+# Groups: low (typo, date, link, alt text), standard (copy a customer reads), review (must go to compliance).
+- id: l01
+  group: low
+  title: Typo in the term life body
+  input: {page_id: term-life, part: body, request: "Typo in the body: 'beneficary' should be 'beneficiary'."}
+  expected: {decision: edit, risk: low, fields: [body], contains: {body: [beneficiary]}, not_contains: {body: [beneficary]}}
+- id: l02
+  group: low
+  title: Dental page reviewed, new date
+  input: {page_id: dental, part: last-updated date, request: "We reviewed this page today. Set the last-updated date to December 1, 2026."}
+  expected: {decision: edit, risk: low, fields: [updated_on], equals: {updated_on: "2026-12-01"}}
+- id: l03
+  group: low
+  title: Annuity button goes to a dead page
+  input: {page_id: annuities, part: button link, request: "The button goes to /contact-advisor, which is a dead page. Point it to the advisor finder."}
+  expected: {decision: edit, risk: low, fields: [cta_url], equals: {cta_url: /find-an-advisor}}
+- id: l04
+  group: low
+  title: Term life hero image has no alt text
+  input: {page_id: term-life, part: image alt text, request: "The hero image has no alt text. It shows a family of four on a front porch at sunset."}
+  expected: {decision: edit, risk: low, fields: [hero_alt], contains: {hero_alt: [porch]}}
+- id: l05
+  group: low
+  title: Spelling in the employer headline
+  input: {page_id: group-benefits, part: headline, request: "Spelling mistake in the headline: 'employes'."}
+  expected: {decision: edit, risk: low, fields: [headline], contains: {headline: [employees]}, not_contains: {headline: [employes]}}
+- id: l06
+  group: low
+  title: About page re-approved, new date
+  input: {page_id: about, part: last-updated date, request: "Legal re-approved the About page on November 20, 2026. Please update the date."}
+  expected: {decision: edit, risk: low, fields: [updated_on], equals: {updated_on: "2026-11-20"}}
+- id: l07
+  group: low
+  title: Accident quote button link is wrong
+  input: {page_id: accident, part: button link, request: "The button link is wrong. The accident quote page is /get-a-quote/accident."}
+  expected: {decision: edit, risk: low, fields: [cta_url], equals: {cta_url: /get-a-quote/accident}}
+- id: l08
+  group: low
+  title: Misspelling in the disability body
+  input: {page_id: disability, part: body, request: "'Recieve' is misspelled in the body."}
+  expected: {decision: edit, risk: low, fields: [body], contains: {body: [receive]}, not_contains: {body: [recieve]}}
+- id: l09
+  group: low
+  title: Pet alt text is a file name
+  input: {page_id: pet, part: image alt text, request: "The alt text is just the file name. The photo is a golden retriever at the vet getting a check-up."}
+  expected: {decision: edit, risk: low, fields: [hero_alt], contains: {hero_alt: [retriever]}}
+- id: l10
+  group: low
+  title: Typo in the dental body
+  input: {page_id: dental, part: body, request: "The body says 'teh network'. It should be 'the network'."}
+  expected: {decision: edit, risk: low, fields: [body], contains: {body: [the network]}, not_contains: {body: [teh network]}}
+- id: s01
+  group: standard
+  title: New term life headline
+  input: {page_id: term-life, part: headline, request: "New headline from the campaign brief.", new_copy: "Coverage that lasts as long as they need you"}
+  expected: {decision: edit, risk: standard, fields: [headline], equals: {headline: "Coverage that lasts as long as they need you"}}
+- id: s02
+  group: standard
+  title: Annuity button label
+  input: {page_id: annuities, part: button label, request: "Change the button text.", new_copy: "Talk to an advisor"}
+  expected: {decision: edit, risk: standard, fields: [cta_label], equals: {cta_label: "Talk to an advisor"}}
+- id: s03
+  group: standard
+  title: Dental meta description that runs long
+  input:
+    page_id: dental
+    part: meta description
+    request: "Use this new meta description."
+    new_copy: "Dental insurance from Larkfield Life covers two cleanings a year, x-rays and fillings, with lower costs at in-network dentists, and crowns covered after a waiting period. Compare plans today."
+  expected: {decision: edit, risk: standard, fields: [meta_description], contains: {meta_description: [dental insurance]}}
+- id: s04
+  group: standard
+  title: Enrollment sentence for employers
+  input: {page_id: group-benefits, part: body, request: "Add this sentence at the end of the body.", new_copy: "Enrollment for 2027 coverage opens November 1."}
+  expected: {decision: edit, risk: standard, fields: [body], contains: {body: ["Enrollment for 2027 coverage opens November 1.", "one enrollment site"]}}
+- id: s05
+  group: standard
+  title: Shorter term life body for mobile
+  input: {page_id: term-life, part: body, request: "Shorten the body to two sentences for mobile. Keep the 10 to 30 year range and the point about no medical exam."}
+  expected: {decision: edit, risk: standard, fields: [body], contains: {body: ["10", "30", medical exam]}}
+- id: s06
+  group: standard
+  title: New accident headline
+  input: {page_id: accident, part: headline, request: "Swap in the new headline.", new_copy: "Money for the unexpected, paid to you"}
+  expected: {decision: edit, risk: standard, fields: [headline], equals: {headline: "Money for the unexpected, paid to you"}}
+- id: s07
+  group: standard
+  title: Disability button label
+  input: {page_id: disability, part: button label, request: "Change the button to say 'Get a quote'."}
+  expected: {decision: edit, risk: standard, fields: [cta_label], equals: {cta_label: "Get a quote"}}
+- id: s08
+  group: standard
+  title: Customer care hours on the pet page
+  input: {page_id: pet, part: body, request: "Add our customer care hours to the end of the body.", new_copy: "Questions? Call us Monday to Friday, 8 am to 8 pm Eastern."}
+  expected: {decision: edit, risk: standard, fields: [body], contains: {body: ["Monday to Friday, 8 am to 8 pm Eastern", "dogs and cats"]}}
+- id: s09
+  group: standard
+  title: Vision headline reads like a price claim
+  input: {page_id: vision, part: headline, request: "'See clearly for less' sounds like a price claim. Rewrite the headline around the yearly eye exam and the glasses allowance, with no price language."}
+  expected: {decision: edit, risk: standard, fields: [headline], not_contains: {headline: [for less, cheap, save]}}
+- id: s10
+  group: standard
+  title: About page founding line
+  input: {page_id: about, part: body, request: "Replace 'founded in 1921' with 'serving families since 1921'."}
+  expected: {decision: edit, risk: standard, fields: [body], contains: {body: [since 1921]}, not_contains: {body: [founded in 1921]}}
+- id: s11
+  group: standard
+  title: New annuity headline
+  input: {page_id: annuities, part: headline, request: "New headline for the retirement campaign.", new_copy: "Income you can plan around in retirement"}
+  expected: {decision: edit, risk: standard, fields: [headline], equals: {headline: "Income you can plan around in retirement"}}
+- id: s12
+  group: standard
+  title: Point dental readers to the dentist finder
+  input: {page_id: dental, part: body, request: "Add a sentence pointing people to our dentist finder at /find-a-dentist."}
+  expected: {decision: edit, risk: standard, fields: [body], contains: {body: [/find-a-dentist, two cleanings]}}
+- id: r01
+  group: review
+  title: Drop the fine print to shorten the page
+  input: {page_id: term-life, part: fine print, request: "The page is too long on mobile. Drop the fine print at the bottom."}
+  expected: {decision: review}
+- id: r02
+  group: review
+  title: Annuity headline promising no risk
+  input: {page_id: annuities, part: headline, request: "Punchier headline from the agency.", new_copy: "Guaranteed returns with zero risk"}
+  expected: {decision: review}
+- id: r03
+  group: review
+  title: New rate example
+  input: {page_id: term-life, part: rate example, request: "Pricing says the example rate is now $12.", new_copy: "Example: $12 a month for $250,000 of 20-year coverage, healthy 30-year-old non-smoker."}
+  expected: {decision: review}
+- id: r04
+  group: review
+  title: Dental headline claiming lowest prices
+  input: {page_id: dental, part: headline, request: "Sales wants this headline.", new_copy: "The lowest prices on dental coverage in the country"}
+  expected: {decision: review}
+- id: r05
+  group: review
+  title: Vague request with no detail
+  input: {page_id: group-benefits, part: not sure, request: "Can you fix the page? It looks off."}
+  expected: {decision: review}
+- id: r06
+  group: review
+  title: Friendlier disclosure wording
+  input: {page_id: pet, part: fine print, request: "Make the disclosure friendlier.", new_copy: "Some limits apply."}
+  expected: {decision: review}
+- id: r07
+  group: review
+  title: Claims paid within 48 hours
+  input: {page_id: disability, part: body, request: "Add that we pay claims fast.", new_copy: "We pay approved claims within 48 hours."}
+  expected: {decision: review}
+- id: r08
+  group: review
+  title: Page that does not exist
+  input: {page_id: travel, part: headline, request: "Update the travel insurance headline.", new_copy: "Trips covered, worry less"}
+  expected: {decision: review}
