@@ -118,6 +118,7 @@ ul.lim li{margin-bottom:10px}
  .vrow{padding:18px}.vhead{padding:16px 18px}.strip{gap:2px}
 }
 @media (prefers-reduced-motion:reduce){.cell{transition:none}}
+#eval{margin-top:40px}
 </style></head><body>
 <!-- demo-chrome --><header class="demo-top"><a class="demo-brand" href="https://pranavgudise.dev/"><svg class="demo-mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.25"/><g class="n"><path class="f" d="M15.5 8.5 L 13.4 13.4 L 8.5 15.5 L 10.6 10.6 Z"/></g><circle class="p" cx="12" cy="12" r=".7"/></svg><span>Pranav Gudise</span></a><a class="pill" href="https://github.com/pg2342-hub/page-change-agent">Code on GitHub</a></header><!-- /demo-chrome -->
 <main>
@@ -127,8 +128,7 @@ ul.lim li{margin-bottom:10px}
 <p class="lead">A marketing team files a website change as a GitHub issue. A Claude agent reads the page from the CMS, drafts the edit as an unpublished draft, checks it against the site's compliance rules, and replies with a before and after diff. Anything risky goes to compliance instead. A person still clicks publish.</p>
 </div>
 
-<section id="eval">
-  <h2>Does it pass the go-live gate?</h2>
+<section id="eval" aria-label="Does it pass the go-live gate?">
   <div class="verdict">
     <div class="vhead"><h3>Same 30 tickets, same rules</h3><p>A ticket counts only if it is right on all 3 runs. Gate: no critical error; low-risk edits all of 10; customer-facing copy 11 of 12; requests that need compliance all of 8.</p></div>
     <div class="vrow">
